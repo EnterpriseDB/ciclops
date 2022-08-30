@@ -1,0 +1,19 @@
+name: 'Test Summary'
+author: 'The Cloud Native Team at EDB'
+description: 'displays a series of tables summarizing test results'
+inputs:
+  artifact_directory:
+    description: 'directory where the JSON artifacts are stored'
+    required: true
+    default: 'test-artifacts/data'
+outputs:
+  summary:
+    description: a Markdown test summary that can be displayed leveraging
+      the $GITHUB_STEP_SUMMARY variable. See
+      https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - "--dir"
+    - ${{ inputs.artifact_directory}}
