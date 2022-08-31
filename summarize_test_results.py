@@ -15,7 +15,8 @@
 #
 
 """Creates a summary of all the "strategy matrix" branches in GH actions that
-are running the E2E Test Suite.
+are running the E2E Test Suite. Produces a Markdown file which can be fed into
+GitHub for the Job Summary, or viewed on its own in file or standard-out.
 
 Each test execution in each "matrix branch" in GH is uploading a JSON artifact
 with the test results.
@@ -87,8 +88,9 @@ def track_time_taken(test_results, test_times):
     """
     name = test_results["name"]
     if (
+        # ignore nullish datetime
         test_results["start_time"] == "0001-01-01T00:00:00Z"
-        or test_results["start_time"] == "0001-01-01T00:00:00Z"
+        or test_results["end_time"] == "0001-01-01T00:00:00Z"
     ):
         return
 
@@ -97,7 +99,6 @@ def track_time_taken(test_results, test_times):
     start_frags = test_results["start_time"].split(".")
     if len(start_frags) != 2:
         return
-
     end_frags = test_results["end_time"].split(".")
     if len(end_frags) != 2:
         return
@@ -273,19 +274,19 @@ def compile_overview(summary):
     }
 
 
-def format_overview(summary, structure):
+def format_overview(summary, structure, file_out=None):
     """print general test metrics"""
-    print("## " + structure["title"] + "\n")
+    print("## " + structure["title"] + "\n", file=file_out)
     table = PrettyTable(align="l")
     table.field_names = structure["header"]
     table.set_style(MARKDOWN)
 
     for row in structure["rows"]:
         table.add_row([summary[row[1]], summary[row[2]], row[0]])
-    print(table)
+    print(table, file=file_out)
 
 
-def format_bucket_table(buckets, structure):
+def format_bucket_table(buckets, structure, file_out=None):
     """print table with bucketed metrics, sorted by decreasing
     amount of failures.
 
@@ -297,7 +298,7 @@ def format_bucket_table(buckets, structure):
     """
     title = structure["title"]
     anchor = structure["anchor"]
-    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n")
+    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n", file=file_out)
     table = PrettyTable(align="l")
     table.field_names = structure["header"]
     table.set_style(MARKDOWN)
@@ -313,14 +314,14 @@ def format_bucket_table(buckets, structure):
             [buckets["failed"][bucket], buckets["total"][bucket], bucket]
         )
 
-    print(table)
+    print(table, file=file_out)
 
 
-def format_by_test(summary, structure):
+def format_by_test(summary, structure, file_out=None):
     """print metrics bucketed by test class"""
     title = structure["title"]
     anchor = structure["anchor"]
-    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n")
+    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n", file=file_out)
 
     table = PrettyTable(align="l")
     table.field_names = structure["header"]
@@ -351,7 +352,7 @@ def format_by_test(summary, structure):
             ]
         )
 
-    print(table)
+    print(table, file=file_out)
 
 
 def format_duration(duration):
@@ -361,11 +362,11 @@ def format_duration(duration):
     return f"{minutes} min {seconds} sec"
 
 
-def format_durations_table(test_times, structure):
+def format_durations_table(test_times, structure, file_out=None):
     """print the table of durations per test"""
     title = structure["title"]
     anchor = structure["anchor"]
-    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n")
+    print(f"\n<h2><a name={anchor}>{title}</a></h2>\n", file=file_out)
 
     table = PrettyTable(align="l", max_width=80)
     table.set_style(MARKDOWN)
@@ -384,10 +385,10 @@ def format_durations_table(test_times, structure):
         branch = test_times["slowest_branch"][bucket]
         table.add_row([longest, shortest, branch, name])
 
-    print(table)
+    print(table, file=file_out)
 
 
-def format_test_failures(summary):
+def format_test_failures(summary, file_out=None):
     """creates the part of the test report that drills into the failures"""
     by_test_section = {
         "title": "Failures by test",
@@ -401,7 +402,7 @@ def format_test_failures(summary):
         ],
     }
 
-    format_by_test(summary, by_test_section)
+    format_by_test(summary, by_test_section, file_out=file_out)
 
     by_matrix_section = {
         "title": "Failures by matrix branch",
@@ -409,7 +410,7 @@ def format_test_failures(summary):
         "header": ["failed tests", "total tests", "matrix branch"],
     }
 
-    format_bucket_table(summary["by_matrix"], by_matrix_section)
+    format_bucket_table(summary["by_matrix"], by_matrix_section, file_out=file_out)
 
     by_k8s_section = {
         "title": "Failures by kubernetes version",
@@ -417,7 +418,7 @@ def format_test_failures(summary):
         "header": ["failed tests", "total tests", "kubernetes version"],
     }
 
-    format_bucket_table(summary["by_k8s"], by_k8s_section)
+    format_bucket_table(summary["by_k8s"], by_k8s_section, file_out=file_out)
 
     by_postgres_section = {
         "title": "Failures by postgres version",
@@ -425,7 +426,7 @@ def format_test_failures(summary):
         "header": ["failed tests", "total tests", "postgres version"],
     }
 
-    format_bucket_table(summary["by_postgres"], by_postgres_section)
+    format_bucket_table(summary["by_postgres"], by_postgres_section, file_out=file_out)
 
     by_platform_section = {
         "title": "Failures by platform",
@@ -433,19 +434,20 @@ def format_test_failures(summary):
         "header": ["failed tests", "total tests", "platform"],
     }
 
-    format_bucket_table(summary["by_platform"], by_platform_section)
+    format_bucket_table(summary["by_platform"], by_platform_section, file_out=file_out)
 
 
-def format_test_summary(summary):
+def format_test_summary(summary, file_out=None):
     """creates a Markdown document with several tables rendering test results.
-    Outputs to stdout like a good 12-factor-app citizen
+    Outputs to stdout like a good 12-factor-app citizen, unless the `file_out`
+    argument is provided
     """
 
     print(
         "Note that there are several tables below: overview, bucketed "
-        + "by several parameters, timings."
+        + "by several parameters, timings.", file=file_out
     )
-    print()
+    print(file=file_out)
     if summary["total_failed"] != 0:
         print(
             "**Index**: [timing table](#user-content-timing) | "
@@ -453,9 +455,9 @@ def format_test_summary(summary):
             + "[by matrix](#user-content-by_matrix) | "
             + "[by k8s](#user-content-by_k8s) | "
             + "[by postgres](#user-content-by_postgres) | "
-            + "[by platform](#user-content-by_platform)"
+            + "[by platform](#user-content-by_platform)", file=file_out
         )
-        print()
+        print(file=file_out)
 
     overview = compile_overview(summary)
 
@@ -472,17 +474,17 @@ def format_test_summary(summary):
         ],
     }
 
-    format_overview(overview, overview_section)
+    format_overview(overview, overview_section, file_out=file_out)
 
     if summary["total_failed"] == 0:
-        print()
+        print(file=file_out)
         print(
             "No failures, no failure stats shown. "
-            "It's not easy being green."
+            "It's not easy being green.", file=file_out
         )
-        print()
+        print(file=file_out)
     else:
-        format_test_failures(summary)
+        format_test_failures(summary, file_out=file_out)
 
     timing_section = {
         "title": "Test times",
@@ -495,7 +497,7 @@ def format_test_summary(summary):
         ],
     }
 
-    format_durations_table(summary["test_durations"], timing_section)
+    format_durations_table(summary["test_durations"], timing_section, file_out=file_out)
 
 
 if __name__ == "__main__":
@@ -509,8 +511,18 @@ if __name__ == "__main__":
         type=str,
         help="directory with the JSON artifacts",
     )
+    parser.add_argument(
+        "-o",
+        "--out",
+        type=str,
+        help="output file",
+    )
 
     args = parser.parse_args()
 
     test_summary = compute_test_summary(args.dir)
-    format_test_summary(test_summary)
+    if (args.out):
+        with open(args.out, "w") as f:
+            format_test_summary(test_summary, file_out=f)
+    else:
+        format_test_summary(test_summary)

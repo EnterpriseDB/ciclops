@@ -1,11 +1,10 @@
 FROM python:3
 
-WORKDIR /usr/src/app
+# WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+COPY . ./
 
-COPY . .
-
-ENTRYPOINT [ "python", "./summarize_test_results.py"]
-CMD ["--dir", "/ported/test-artifacts/data"]
+ENTRYPOINT [ "python", "/summarize_test_results.py"]
+CMD ["--dir", "./test-artifacts", "--out", ""]

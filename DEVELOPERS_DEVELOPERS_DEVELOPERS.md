@@ -3,23 +3,51 @@
 The `ciclops` GitHub Action runs using a Docker container that encapsulates the
 Python script that was developed to do the CI test analysis.
 
-Build the container with
+## Developing and testing
 
-``` shell docker build -t gh-ciclops . ```
-
-To run it, you will need to mount the local directory where you have the JSON
-artifacts onto the container. You can do that with the `--mount` command-line
-option to `docker`.
-
-The Dockerfile provides an `ENTRYPOINT` for the python script where the magic
-happens, and a `CMD` with the default options to give to the script.
-
-**NOTE**: by convention, we assume the directory where the tests are run will be
-mounted into `/ported` in the docker container.
-
-To run the Python script locally, assuming the test that holds the JSON
-artifacts is `./test-artifacts`, you would run:
+You can test directly with the Python code on the `example-artifacts` directory,
+where you can see some JSON artifacts in the expected format. For example:
 
 ``` shell
-docker run -it --mount src="$(pwd)",target=/ported,type=bind  gh-ciclops --dir=/ported/test-artifacts
+python summarize_test_results.py --dir example-artifacts
 ```
+
+You can build the container with
+
+``` shell
+docker build -t gh-ciclops .
+```
+
+To get a better idea of how *ciclops* will work when used in GitHub actions, it
+is useful to run locally with `act`. See
+[*act* homepage](https://github.com/nektos/act) for reference.
+
+In the `.github/workflows` directory, you will find a test YAML you can run
+with `act`.
+
+**WARNING**: to test with `act`, take care to use the `-b` option to **bind**
+the working directory to the Docker container. The default behavior of copying
+will not work properly (at least at the time of testing this, September of
+2022.)
+
+`act` does not have direct support for the GitHub Job Summaries.
+See [issue on `act` for GH job summary](https://github.com/nektos/act/issues/1187).
+As a workaround, we can use the `--env` option. Example:
+
+``` shell
+act -b --env GITHUB_STEP_SUMMARY='github-summary.md'
+```
+
+## How it works
+
+The files in this repository are needed for the Dockerfile to build and run, of
+course. In addition, GitHub will copy the files in the **user's** GitHub
+workflow location to the Dockerfile too.
+
+In the Dockerfile, the `COPY . ./` line will include the directory where you are
+storing the JSON test artifacts at build time.
+See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions):
+
+> Before the action executes, GitHub will mount the GITHUB_WORKSPACE directory
+> on top of anything that was at that location in the Docker image and set
+> GITHUB_WORKSPACE as the working directory.
