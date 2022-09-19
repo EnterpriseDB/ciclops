@@ -18,12 +18,12 @@ You can build the container with
 docker build -t gh-ciclops .
 ```
 
-To get a better idea of how *ciclops* will work when used in GitHub actions, it
-is useful to run locally with `act`. See
+To get a better idea of how *ciclops* will work when used in GitHub workflows,
+it is useful to run locally with `act`. See
 [*act* homepage](https://github.com/nektos/act) for reference.
 
-In the `.github/workflows` directory, you will find a test YAML you can run
-with `act`.
+In the `.github/workflows` directory in this repo, you will find a test YAML
+you can run with `act`.
 
 **WARNING**: to test with `act`, take care to use the `-b` option to **bind**
 the working directory to the Docker container. The default behavior of copying
@@ -38,11 +38,14 @@ As a workaround, we can use the `--env` option. Example:
 act -b --env GITHUB_STEP_SUMMARY='github-summary.md'
 ```
 
+Running this should create a file github-summary.md with the test summary.
+
 ## How it works
 
 The files in this repository are needed for the Dockerfile to build and run, of
 course. In addition, GitHub will copy the files in the **user's** GitHub
-workflow location to the Dockerfile too.
+workflow location to the Dockerfile too. This is how the folder with the JSON
+artifacts will get passed.
 
 In the Dockerfile, the `COPY . ./` line will include the directory where you are
 storing the JSON test artifacts at build time.
@@ -51,3 +54,7 @@ See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-
 > Before the action executes, GitHub will mount the GITHUB_WORKSPACE directory
 > on top of anything that was at that location in the Docker image and set
 > GITHUB_WORKSPACE as the working directory.
+
+**NOTE**: the behavior of the `COPY` command in the Dockerfile seems quite
+brittle, regarding on doing the copy recursively or not. The slash in
+`COPY . ./` ensured that the copy was recursive.

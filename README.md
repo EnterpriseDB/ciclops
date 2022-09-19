@@ -11,26 +11,28 @@ watch over Continuous Integration pipelines for all eternity.
 
 ## Usage
 
-To use ciclops, your Test step(s) in your CI/CD pipeline shoudl be producing
-JSON reports from each test executed. You can find a sample YAML file here.
+To use ciclops, your Test step(s) in your CI/CD pipeline should be producing
+JSON artifacts with the results of each test executed.
+You can find a example YAML artifacts in the `example_artifacts` directory.
 
 If your CI/CD pipeline runs tests in several *strategy matrix* branches, you
-should ensure the JSON artifacts are uploaded via the GitHub `upload` action.
+should ensure the JSON artifacts are uploaded (e.g. via the GitHub
+`actions/upload-artifact` action.)
 You should add the summary creation step to fire once all branches have
 finished, then download all the JSON artifacts created in the various branches,
-and moved to one directory.
+and gather them into one directory.
 
 With those prerequisites, you can trigger ciclops with the `artifact_directory`
 argument set to the folder containing the JSON artifacts, and the `output_file`
-set to write to the $GITHUB_STEP_SUMMARY environment variable provided
-by GitHub.
+set to write a markdown report. Then you can print that to the
+$GITHUB_STEP_SUMMARY environment variable provided by GitHub.
 
 For example:
 
 ``` yaml
     …
     …
-    sßteps:
+    steps:
       - uses: actions/checkout@v3
 
       - name: Create a directory for the artifacts
@@ -53,7 +55,10 @@ For example:
         uses: EnterpriseDB/ciclops@main
         with:
           artifact_directory: test-artifacts/data
-          output_file: "$GITHUB_STEP_SUMMARY"
+          output_file: test-summary.md
+
+      - name: Create GitHub Job Summary from the file
+        run: cat test-summary.md >> $GITHUB_STEP_SUMMARY
 ```
 
 ## Origin
