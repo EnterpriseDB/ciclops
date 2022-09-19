@@ -56,5 +56,5 @@ See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-
 > GITHUB_WORKSPACE as the working directory.
 
 **NOTE**: the behavior of the `COPY` command in the Dockerfile seems quite
-brittle, regarding on doing the copy recursively or not. The slash in
-`COPY . ./` ensured that the copy was recursive.
+finicky, with regards to doing the copy recursively or not. The command used
+`COPY . .` ensured that the copy was recursive.
