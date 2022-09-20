@@ -9,11 +9,27 @@ investigations when tests fail.
 The legends tell of a mythical one-eyed creature that was cursed by the gods to
 watch over Continuous Integration pipelines for all eternity.
 
+## Inputs
+
+- `artifact_directory`: **Required** directory holding the
+  JSON artifacts representing tests.
+- `output_file`: **Optional** the file where the markdown report will be
+  written. If omitted, the report will be written to Standard-Out.
+
+## Outputs
+
+No outputs in the GitHub Actions sense. It does write a test summary in Markdown
+format, either to a file or to Stdout depending on the `output_file` input.
+
 ## Usage
 
 To use ciclops, your Test step(s) in your CI/CD pipeline should be producing
 JSON artifacts with the results of each test executed.
-You can find a example YAML artifacts in the `example_artifacts` directory.
+You can find example JSON artifacts in the `example_artifacts` directory.
+
+**NOTE**: these examples show the expected schema of the JSON artifacts. The
+field names are generic and should serve you. Other fields in JSON objects will
+be ignored.
 
 If your CI/CD pipeline runs tests in several *strategy matrix* branches, you
 should ensure the JSON artifacts are uploaded (e.g. via the GitHub
@@ -24,7 +40,7 @@ and gather them into one directory.
 
 With those prerequisites, you can trigger ciclops with the `artifact_directory`
 argument set to the folder containing the JSON artifacts, and the `output_file`
-set to write a markdown report. Then you can print that to the
+set to write a markdown report. Then you can print that report to the
 $GITHUB_STEP_SUMMARY environment variable provided by GitHub.
 
 For example:
@@ -77,6 +93,6 @@ like … tears in rain.
 *ciclops* adds a
 [job summary](https://github.blog/2022-05-09-supercharging-github-actions-with-job-summaries/)
 to the GitHub Actions output of a CI/CD pipeline. It buckets tests according to
-several different criteria, doing the grunt work of figuring out if there was a
+several criteria, doing the grunt work of figuring out if there was a
 pattern to test failures.
 It also displays a table of test durations, sorted by slowest.

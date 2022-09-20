@@ -1,7 +1,7 @@
 # building and testing locally
 
 The `ciclops` GitHub Action runs using a Docker container that encapsulates the
-Python script that was developed to do the CI test analysis.
+Python script that does the CI test analysis.
 
 ## Developing and testing
 
@@ -23,15 +23,14 @@ it is useful to run locally with `act`. See
 [*act* homepage](https://github.com/nektos/act) for reference.
 
 In the `.github/workflows` directory in this repo, you will find a test YAML
-you can run with `act`.
+workflow file you can run with `act`.
 
 **WARNING**: to test with `act`, take care to use the `-b` option to **bind**
 the working directory to the Docker container. The default behavior of copying
-will not work properly (at least at the time of testing this, September of
-2022.)
+will not work properly (at least at the time of testing this, September 2022.)
 
 `act` does not have direct support for the GitHub Job Summaries.
-See [issue on `act` for GH job summary](https://github.com/nektos/act/issues/1187).
+See [`act` issue for GH job summary](https://github.com/nektos/act/issues/1187).
 As a workaround, we can use the `--env` option. Example:
 
 ``` shell
@@ -56,6 +55,6 @@ See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-
 > on top of anything that was at that location in the Docker image and set
 > GITHUB_WORKSPACE as the working directory.
 
-**NOTE**: the behavior of the `COPY` command in the Dockerfile seems quite
-finicky, with regards to doing the copy recursively or not. The command used,
+**NOTE**: the behavior of the `COPY` command in Dockerfiles seems quite
+finicky on whether it's done recursively or not. The invocation used,
 `COPY . .`, ensured that the copy was recursive.
