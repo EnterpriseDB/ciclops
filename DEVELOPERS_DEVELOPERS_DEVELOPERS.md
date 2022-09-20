@@ -1,4 +1,4 @@
-# building and using locally
+# building and testing locally
 
 The `ciclops` GitHub Action runs using a Docker container that encapsulates the
 Python script that was developed to do the CI test analysis.
@@ -38,17 +38,18 @@ As a workaround, we can use the `--env` option. Example:
 act -b --env GITHUB_STEP_SUMMARY='github-summary.md'
 ```
 
-Running this should create a file github-summary.md with the test summary.
+Running this should create a file `github-summary.md` with the test summary.
 
 ## How it works
 
 The files in this repository are needed for the Dockerfile to build and run, of
 course. In addition, GitHub will copy the files in the **user's** GitHub
 workflow location to the Dockerfile too. This is how the folder with the JSON
-artifacts will get passed.
+artifacts will get passed. When invoking with `act`, we are simulating this with
+the `-b` option.
 
-In the Dockerfile, the `COPY . ./` line will include the directory where you are
-storing the JSON test artifacts at build time.
+In the Dockerfile, the `COPY . .` line will include the directory with the
+JSON test artifacts at build time.
 See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions):
 
 > Before the action executes, GitHub will mount the GITHUB_WORKSPACE directory
@@ -56,5 +57,5 @@ See [GitHub support for Dockerfile](https://docs.github.com/en/actions/creating-
 > GITHUB_WORKSPACE as the working directory.
 
 **NOTE**: the behavior of the `COPY` command in the Dockerfile seems quite
-finicky, with regards to doing the copy recursively or not. The command used
-`COPY . .` ensured that the copy was recursive.
+finicky, with regards to doing the copy recursively or not. The command used,
+`COPY . .`, ensured that the copy was recursive.

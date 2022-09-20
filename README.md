@@ -65,7 +65,7 @@ For example:
 
 At EDB, working on a series of Kubernetes operators for PostgreSQL, we have an
 extensive test suite that is executed for a variety of combinations of
-PostgreSQL and Kubernetes versions, using GitHub's "strategy matrix" construct.
+PostgreSQL and Kubernetes versions, using GitHub's *strategy matrix* construct.
 
 When there are failures in a given run of our CI/CD pipeline, it becomes
 difficult to make sense of things. With so many tests executed in so many matrix
