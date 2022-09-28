@@ -70,6 +70,29 @@ def is_failed(e2e_test):
         and e2e_test["state"] != "ignoreFailed"
     )
 
+def is_external_failure(e2e_test):
+    """checks if the test failed for an external reason. E.g. because the
+    whole suite timed out, or the user canceled execution.
+    For example, in ginkgo, the status "interrupted" is used when the suite
+    times out
+    """
+    return (
+        is_failed(e2e_test)
+        and e2e_test["state"] != "failed"
+    )
+
+def is_special_error(e2e_test):
+    """checks if the test failed due to one of a set of well-known errors
+    that may be out-of band and warrant special display in the Test Summary
+    """
+    special_failures = {
+        "operator was restarted": True,
+        "operator was renamed": True,
+    }
+    return (
+        "error" in e2e_test
+        and e2e_test["error"] in special_failures
+    )
 
 def combine_postgres_data(test_entry):
     """combines Postgres kind and version of the test artifact to
@@ -87,6 +110,14 @@ def track_time_taken(test_results, test_times):
     running each kind of test
     """
     name = test_results["name"]
+    # tag abnormal failures, e.g.: "[operator was restarted]  Imports with …"
+    if is_external_failure(test_results):
+        tag = test_results["state"]
+        name = f"[{tag}] {name}"
+    elif is_special_error(test_results):
+        tag = test_results["error"]
+        name = f"[{tag}] {name}"
+
     if (
         # ignore nullish datetime
         test_results["start_time"] == "0001-01-01T00:00:00Z"
@@ -126,6 +157,14 @@ def count_bucketed_by_test(test_results, by_test):
     failing versions of postgres, bucketed by test name.
     """
     name = test_results["name"]
+    # tag abnormal failures, e.g.: "[operator was restarted]  Imports with …"
+    if is_external_failure(test_results):
+        tag = test_results["state"]
+        name = f"[{tag}] {name}"
+    elif is_special_error(test_results):
+        tag = test_results["error"]
+        name = f"[{tag}] {name}"
+
     if name not in by_test["total"]:
         by_test["total"][name] = 0
     by_test["total"][name] = 1 + by_test["total"][name]
