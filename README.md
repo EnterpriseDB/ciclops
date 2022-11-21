@@ -68,7 +68,7 @@ For example:
             mv test-artifacts/*/*.json test-artifacts/data
 
       - name: Compute the E2E test summary
-        uses: EnterpriseDB/ciclops@main
+        uses: cloudnative-pg/ciclops@main
         with:
           artifact_directory: test-artifacts/data
           output_file: test-summary.md
@@ -96,3 +96,20 @@ to the GitHub Actions output of a CI/CD pipeline. It buckets tests according to
 several criteria, doing the grunt work of figuring out if there was a
 pattern to test failures.
 It also displays a table of test durations, sorted by slowest.
+
+## Contributing
+
+Please read the [code of conduct](CODE_OF_CONDUCT.md) and the
+[guidelines](CONTRIBUTING.md) to contribute to the project.
+
+## Disclaimer
+
+`ciclops` is open source software and comes "as is". Please carefully
+read the [license](LICENSE) before you use this software, in particular
+the "Disclaimer of Warranty" and "Limitation of Liability" items.
+
+## Copyright
+
+`ciclops` is distributed under Apache License 2.0.
+
+Copyright (C) The CloudNativePG Contributors.
